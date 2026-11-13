@@ -1,0 +1,146 @@
+{
+  "project_name": "Mulisınav",
+  "app_type": "landing_page_with_demo",
+  "target_audience": "Turkish Middle & High School Students (5, 6, 7, 8, 9, 10, 11, 12. Sınıf), Parents, Teachers",
+  "emotional_archetype": "ARCHETYPE 3 & 6: Vibrant Play & Energetic Youth Learning (Neo-Brutalist Pop & Modern Playful)",
+  "language": "Turkish (ALL copy MUST be in authentic Turkish)",
+  "typography": {
+    "heading_font": "Plus Jakarta Sans / Outfit / Outfit Display (Google Fonts)",
+    "body_font": "Plus Jakarta Sans / DM Sans",
+    "mono_font": "JetBrains Mono / Space Mono (for exam codes and difficulty badges)",
+    "font_genres_rule": "DO NOT use Inter or Roboto for headings. Rotate through Plus Jakarta Sans / Outfit for punchy modern youth vibe.",
+    "hierarchy": {
+      "h1_hero": "text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1]",
+      "h2_section": "text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight",
+      "h3_subsection": "text-xl sm:text-2xl font-bold",
+      "h4_card": "text-lg sm:text-xl font-semibold",
+      "body_main": "text-base sm:text-lg text-slate-700 dark:text-slate-300 leading-relaxed",
+      "eyebrow_label": "text-xs font-bold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400"
+    }
+  },
+  "colors": {
+    "theme_mode": "Light default with energetic pop accents + full Dark mode support (toggleable)",
+    "palette": {
+      "primary_indigo": "#4F46E5",
+      "primary_hover": "#4338CA",
+      "accent_violet": "#7C3AED",
+      "accent_amber": "#F59E0B",
+      "accent_emerald": "#10B981",
+      "accent_rose": "#F43F5E",
+      "accent_cyan": "#06B6D4",
+      "background_light": "#F8FAFC",
+      "surface_light": "#FFFFFF",
+      "surface_card_light": "#FFFFFF",
+      "text_main_light": "#0F172A",
+      "text_muted_light": "#64748B",
+      "border_light": "#E2E8F0",
+      "background_dark": "#0B0F17",
+      "surface_dark": "#111827",
+      "surface_card_dark": "#1F2937",
+      "text_main_dark": "#F8FAFC",
+      "text_muted_dark": "#94A3B8",
+      "border_dark": "#1F2937"
+    },
+    "rules": [
+      "NO pure black #000000; use #0B0F17 or #0F172A",
+      "NO #7351B7 or #1B93A4 forbidden colors",
+      "High contrast buttons with micro-interactions and explicit text color on hover",
+      "Subject tags have distinct vibrant badge colors: Matematik (Indigo), Fen Bilimleri (Emerald), Türkçe (Rose), Sosyal/Tarih (Amber), İngilizce (Cyan), Fizik/Kimya/Biyoloji (Violet)"
+    ]
+  },
+  "visual_enhancers": {
+    "shapes_and_cards": "Rounded-2xl and rounded-3xl geometries with subtle 1px border ring and layered drop shadows",
+    "glassmorphism": "backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80",
+    "marquee": "Slow editorial scrolling ribbon with subject keywords, exam tips, and 100% MEB Müfredat Uyumlu tag",
+    "hero_badge": "Pill badge with pulsing live icon: '🚀 2026 MEB Yazılı Senaryolarına %100 Uyumlu AI Soru Motoru'",
+    "interactive_decorations": "SVG floating math symbols, study sparkles, custom geometric background grid dots, animated radial gradient glows"
+  },
+  "key_features_and_components": [
+    {
+      "name": "Original SVG Logo & Header Nav",
+      "details": "Custom geometric 'Mulisınav' SVG logo with stylized 'M' exam badge & pencil sparkle node. Sticky header with Lenis smooth navigation links (Ana Sayfa, Özellikler, Nasıl Çalışır?, Canlı AI Deneme, Sınıflar, SSS), theme toggle switch, and 'Hemen Soru Üret' CTA button."
+    },
+    {
+      "name": "Kinetic Hero Section",
+      "details": "Masked line-by-line reveal using Framer Motion (`initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}`). Headline: 'Yazılı Sınavlardan 100 Almak Artık Çok Kolay!'. Subtitle highlighting 5–12. sınıf MEB senaryolarına uygun yazılı soruları. Interactive floating 3D/parallax exam preview card."
+    },
+    {
+      "name": "Slow Editorial Marquee",
+      "details": "Powered by kinetic scroll/css animation. Displays: '⚡ 5. Sınıftan 12. Sınıfa Kadar Uyumlu' | '🎯 Açık Uçlu Sınav Soruları' | '📝 Detaylı Çözümler ve Puanlama Kriterleri' | '✨ MEB Kazanım Matrisi Destekli' | '🪶 Yazdırılabilir PDF Formatı'."
+    },
+    {
+      "name": "Features Bento Grid (MODE A Tetris)",
+      "details": "12-column responsive bento with asymmetrical cards: Hero bento (AI Senaryolu Soru Oluşturucu), Tall bento (Açık Uçlu ve Çoktan Seçmeli Formatlar), Square bento (Anında Detaylı Çözüm Rehberi), Compact bento (MEB Müfredat Matrisi), and Compact bento (Yazdır ve Çalış PDF Çıktısı)."
+    },
+    {
+      "name": "How It Works (3-Step Roadmap)",
+      "details": "Step 1: Sınıfını ve Dersini Seç (5-12. Sınıf). Step 2: Konuyu veya Konu Başlığını Belirt. Step 3: AI Sınav Kağıdını Anında Üretsin ve Çözümleri Aç!"
+    },
+    {
+      "name": "Live AI Demo Component (Working Application)",
+      "details": "Interactive playground where users select: Sınıf (5-12), Ders (Matematik, Fen Bilimleri, Türkçe, T.C. İnkılap Tarihi, Fizik, Kimya, Biyoloji vb.), Soru Tipi (Açık Uçlu MEB Yazılı Formatı / Test / Karma), Zorluk (Kolay, Orta, Zor). Generates 5 real sample exam questions with point values (e.g., 20 Puan), detailed step-by-step answer key reveal button, score calculation simulator, and 'PDF / Sınav Kağıdı İndir' action button."
+    },
+    {
+      "name": "Subjects & Grade Matrix Grid",
+      "details": "Filterable card grid showing 5-8. Sınıf Ortaokul and 9-12. Sınıf Lise subject modules with topics count and sample question previews."
+    },
+    {
+      "name": "Waitlist & Early Access Email Signup",
+      "details": "Vibrant email form with toast notification feedback (via Sonner), instant confirmation modal, and counter badge ('3,480+ öğrenci katıldı')."
+    },
+    {
+      "name": "FAQ Accordion",
+      "details": "Shadcn Accordion answering MEB compliance, free trial questions, open-ended question support, teacher printable formats, and grade support."
+    },
+    {
+      "name": "Footer",
+      "details": "Massive display brand typography ('MULISINAV'), quick links, grade jump links, copyright, and subtle gradient border."
+    }
+  ],
+  "image_urls": [
+    {
+      "category": "Hero Study Background & Focus",
+      "url": "https://images.unsplash.com/photo-1759984782139-2c747fc588be?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NjV8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGhpZ2glMjBzY2hvb2wlMjBzdHVkZW50cyUyMHN0dWR5aW5nJTIwY29sb3JmdWwlMjBkZXNrfGVufDB8fHx8MTc5NDU3MjM3N3ww&ixlib=rb-4.1.0&q=85",
+      "description": "Student writing notes with colorful markers on study desk"
+    },
+    {
+      "category": "Demo Exam & Laptop Scene",
+      "url": "https://images.unsplash.com/photo-1623177578701-2727010a3f1f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NjV8MHwxfHNlYXJjaHwyfHxoYXBweSUyMGhpZ2glMjBzY2hvb2wlMjBzdHVkZW50cyUyMHN0dWR5aW5nJTIwY29sb3JmdWwlMjBkZXNrfGVufDB8fHx8MTc5NDU3MjM3N3ww&ixlib=rb-4.1.0&q=85",
+      "description": "Student interacting with digital learning laptop"
+    },
+    {
+      "category": "Bookshelf & Knowledge Stack",
+      "url": "https://images.unsplash.com/photo-1749209127795-496c5d48f3e1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwzfHxzdHVkZW50JTIwbGFwdG9wJTIwbGlicmFyeSUyMGNvbG9yZnVsJTIwc3R1ZHl8ZW58MHx8fHwxNzk0NTcyMzgwfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Vibrant colorful books arranged neatly for subjects showcase"
+    }
+  ],
+  "motion_and_libraries": {
+    "smooth_scroll": "Lenis (initialized on window load)",
+    "animations": "Framer Motion for scroll-triggered entrance, parallax mouse movement on hero card, accordion animations, answer reveal toggle expand",
+    "toast_notifications": "Sonner"
+  },
+  "testing_and_data_attributes": {
+    "rule": "ALL interactive components MUST include semantic kebab-case data-testid attributes.",
+    "examples": [
+      "data-testid='navbar-logo'",
+      "data-testid='nav-link-demo'",
+      "data-testid='hero-cta-generate'",
+      "data-testid='demo-grade-select'",
+      "data-testid='demo-subject-select'",
+      "data-testid='demo-topic-input'",
+      "data-testid='demo-generate-button'",
+      "data-testid='demo-question-card-1'",
+      "data-testid='demo-toggle-answer-1'",
+      "data-testid='demo-download-pdf-button'",
+      "data-testid='waitlist-email-input'",
+      "data-testid='waitlist-submit-button'",
+      "data-testid='faq-accordion-item-1'"
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Ensure all text content is in clean, professional Turkish suitable for students (5-12. sınıf) and parents.",
+    "Build the live AI demo with both client-side fast generator templates + full backend integration capability so users get immediate 100% working open-ended MEB style exam questions, answers, points, and score reveal.",
+    "Use proper padding (p-6, p-8) for bounded cards and ensure high contrast for all buttons and state toggles.",
+    "Avoid generic centered layouts; use grid structure with generous spacing, subtle animated glows, and playful subject badges."
+  ]
+}
