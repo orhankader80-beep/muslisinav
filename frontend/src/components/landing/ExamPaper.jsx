@@ -38,7 +38,7 @@ export const ExamPaper = ({ exam, meta, onNew }) => {
       </ol>
       <footer className="no-print mt-4 flex flex-col gap-3 border-t-[2.5px] border-[#16130F] pt-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-[#16130F]/75" data-testid="demo-score-hint">
-          {marked < questions.length ? `${questions.length - marked} soruyu daha işaretle, notun netleşsin.` : score >= 85 ? "Harika! Bu konuya hazırsın." : score >= 50 ? "İyi gidiyorsun. Yanlışlarının çözümüne bir göz at." : "Çözümleri oku ve yeni bir deneme oluştur."}
+          {marked < questions.length ? `Cevabını kontrol ettikten sonra "Doğru bildim" ya da "Yanlış bildim"e bas; notun ona göre hesaplanır. ${questions.length - marked} soru kaldı.` : score >= 85 ? "Harika! Bu konuya hazırsın." : score >= 50 ? "İyi gidiyorsun. Yanlışlarının çözümüne bir göz at." : "Çözümleri oku ve yeni bir deneme oluştur."}
         </p>
         <div className="flex gap-2">
           <button data-testid="demo-download-pdf-button" onClick={() => window.print()} className="btn-pop brut-sm inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold">

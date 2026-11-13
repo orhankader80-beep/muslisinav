@@ -47,12 +47,12 @@ export const QuestionCard = ({ q, i, mark, onMark }) => {
             <button data-testid={`demo-toggle-answer-${n}`} onClick={() => setOpen((o) => !o)} className="btn-pop brut-sm inline-flex items-center gap-2 rounded-full bg-[#FFD43B] px-4 py-2 text-sm font-bold">
               {open ? <EyeOff size={16} /> : <Eye size={16} />} {open ? "Cevabı gizle" : "Cevabı göster"}
             </button>
-            <span className="ml-1 text-sm font-medium text-[#16130F]/70">Ben:</span>
+            <span className="ml-1 text-sm font-semibold text-[#16130F]/80" data-testid={`demo-self-check-label-${n}`}>Cevabım doğru muydu?</span>
             <button data-testid={`demo-mark-correct-${n}`} onClick={() => onMark(mark === "ok" ? null : "ok")} aria-pressed={mark === "ok"} className={`brut-sm inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-bold transition-colors ${mark === "ok" ? "bg-[#2ED59A]" : "bg-white hover:bg-[#2ED59A]/40"}`}>
-              <Check size={16} /> Doğru
+              <Check size={16} /> Doğru bildim
             </button>
             <button data-testid={`demo-mark-wrong-${n}`} onClick={() => onMark(mark === "no" ? null : "no")} aria-pressed={mark === "no"} className={`brut-sm inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-bold transition-colors ${mark === "no" ? "bg-[#FF5436]" : "bg-white hover:bg-[#FF5436]/40"}`}>
-              <X size={16} /> Yanlış
+              <X size={16} /> Yanlış bildim
             </button>
           </div>
 
