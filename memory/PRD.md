@@ -19,6 +19,12 @@ User choices: Tanıtım + çalışan deneme; Ortaokul ve lise (5–12); ad: Muli
 - Open-ended answers typed into textareas; test options clickable.
 - "Cevaplarımı kontrol et": test questions graded in browser, open-ended graded by AI via `POST /api/check` (partial credit + feedback, 30 req/hour/IP). Manual Doğru/Yanlış buttons removed.
 
+## Implemented (2026-11-13, iteration 3)
+- Auth: email/password (JWT cookies, bcrypt, brute-force lock) + Emergent Google login; shared users collection by email. Pages: /giris, /yazililarim (list, stats, delete), /yazili/:id (re-open, re-check).
+- Logged-in users' exams auto-saved; checked answers/score saved via POST /api/exams/{id}/attempt.
+- Guests: 2 free exams per browser (X-Guest-Id), then sign-up prompt.
+- Not built: forgot/reset password (needs an email provider).
+
 ## Backlog
 - P1: Konu bazlı soru geçmişi (tarayıcıda kayıtlı), PDF indirme (print yerine gerçek PDF)
 - P2: Öğrenci hesapları ve ilerleme takibi, öğretmen modu

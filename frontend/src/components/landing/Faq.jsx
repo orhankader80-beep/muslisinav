@@ -2,7 +2,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Reveal, Eyebrow } from "./shared";
 
 const QA = [
-  ["Mulisınav ücretli mi?", "Canlı deneme şu an ücretsiz. Sayfadaki formdan hemen deneme yazılısı oluşturabilirsin."],
+  ["Mulisınav ücretli mi?", "Hayır. Kayıt olmadan 2 deneme yazılısı oluşturabilirsin. Ücretsiz kayıt olursan daha fazla yazılı oluşturur, yazılılarını ve notlarını hesabında saklarsın."],
   ["Hangi sınıflar ve dersler var?", "5'ten 12'ye kadar tüm sınıflar. Ortaokulda Matematik, Fen, Türkçe, Sosyal Bilgiler, İnkılap Tarihi, İngilizce ve Din Kültürü; lisede bunlara Fizik, Kimya, Biyoloji, Edebiyat, Tarih, Coğrafya ve Felsefe eklenir."],
   ["Sorular müfredata uygun mu?", "Sorular yapay zekâ tarafından MEB müfredatı esas alınarak, seçtiğin sınıf seviyesine göre hazırlanır. Yapay zekâ bazen hata yapabilir; önemli bilgileri ders kitabından kontrol etmeni öneririz."],
   ["Açık uçlu sorular da geliyor mu?", "Evet. Açık uçlu, test ya da ikisinin karışımı olarak seçebilirsin. Her sorunun puanı, cevabı ve çözümü vardır."],

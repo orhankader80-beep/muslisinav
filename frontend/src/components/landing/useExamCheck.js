@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { apiFetch } from "@/lib/api";
 
-const API = process.env.REACT_APP_BACKEND_URL ? `${process.env.REACT_APP_BACKEND_URL}/api` : null;
 const keyLetter = (a) => (String(a || "").trim().match(/^([A-E])\b/i)?.[1] || "").toUpperCase();
 
-export const useExamCheck = (questions, meta) => {
-  const [answers, setAnswers] = useState({});
-  const [results, setResults] = useState({});
+export const useExamCheck = (questions, meta, { examId, initialAnswers, initialResults } = {}) => {
+  const [answers, setAnswers] = useState(initialAnswers || {});
+  const [results, setResults] = useState(initialResults || {});
   const [checking, setChecking] = useState(false);
 
   const setAnswer = (i, v) => setAnswers((p) => ({ ...p, [i]: v }));
@@ -32,14 +32,19 @@ export const useExamCheck = (questions, meta) => {
     setChecking(true);
     try {
       if (items.length) {
-        if (!API) throw new Error();
-        const res = await fetch(`${API}/check`, { method: "POST", headers: { "Content-Type": "application/json" },
+        const res = await apiFetch("/check", { method: "POST",
           body: JSON.stringify({ grade: meta.grade, subject: meta.subject, items }) });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data?.detail);
         (Array.isArray(data?.results) ? data.results : []).forEach((r) => { out[r.index] = r; });
       }
       setResults(out);
+      if (examId) {
+        const strAnswers = Object.fromEntries(Object.entries(answers).map(([k, v]) => [k, String(v ?? "")]));
+        const saved = await apiFetch(`/exams/${examId}/attempt`, { method: "POST", body: JSON.stringify({ answers: strAnswers, results: out }) });
+        if (saved.ok) toast.success("Notun Yazılılarım'a kaydedildi.");
+        else toast.error("Not kaydedilemedi.");
+      }
     } catch (err) {
       toast.error(typeof err?.message === "string" && err.message ? err.message : "Cevaplar şu an kontrol edilemedi, tekrar dene.");
     } finally {

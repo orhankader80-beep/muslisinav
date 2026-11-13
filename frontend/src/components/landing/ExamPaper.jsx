@@ -4,9 +4,9 @@ import { LogoMark } from "./Logo";
 import { QuestionCard } from "./QuestionCard";
 import { useExamCheck } from "./useExamCheck";
 
-export const ExamPaper = ({ exam, meta, onNew }) => {
+export const ExamPaper = ({ exam, meta, onNew, examId, initialAnswers, initialResults }) => {
   const questions = useMemo(() => (Array.isArray(exam?.questions) ? exam.questions : []), [exam]);
-  const { answers, setAnswer, results, checking, check } = useExamCheck(questions, meta);
+  const { answers, setAnswer, results, checking, check } = useExamCheck(questions, meta, { examId, initialAnswers, initialResults });
   const total = questions.reduce((s, q) => s + (Number(q?.points) || 0), 0);
   const checked = Object.keys(results).length > 0;
   const score = Object.values(results).reduce((s, r) => s + (Number(r?.score) || 0), 0);

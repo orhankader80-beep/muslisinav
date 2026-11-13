@@ -2,7 +2,10 @@ import { motion } from "framer-motion";
 
 export const scrollToId = (id) => {
   const el = document.getElementById(id);
-  if (!el) return;
+  if (!el) {
+    window.__navigate?.(`/#${id}`);
+    return;
+  }
   if (window.__lenis) window.__lenis.scrollTo(el, { offset: -80 });
   else el.scrollIntoView({ behavior: "smooth" });
 };

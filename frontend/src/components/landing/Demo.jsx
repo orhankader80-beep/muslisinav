@@ -1,12 +1,28 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { PencilLine } from "lucide-react";
+import { PencilLine, Lock, BookOpenCheck } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { apiFetch, apiJson, errText } from "@/lib/api";
 import { Reveal, Eyebrow, scrollToId } from "./shared";
 import { DemoForm } from "./DemoForm";
 import { ExamPaper } from "./ExamPaper";
 
-const API = process.env.REACT_APP_BACKEND_URL ? `${process.env.REACT_APP_BACKEND_URL}/api` : null;
+const GuestLimit = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="brut flex min-h-[420px] flex-col items-start justify-center rounded-3xl bg-[#FFD43B] p-8 text-[#16130F] sm:p-12" data-testid="demo-guest-limit">
+      <span className="brut-sm inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white"><Lock /></span>
+      <p className="font-display mt-6 text-3xl font-extrabold leading-tight sm:text-4xl">2 ücretsiz yazılı hakkını kullandın.</p>
+      <p className="mt-3 max-w-md text-[#16130F]/85">Ücretsiz kayıt ol; yeni yazılılar oluştur, notların ve cevapların hesabında saklansın.</p>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <button data-testid="demo-guest-register" onClick={() => navigate("/giris", { state: { mode: "register", from: "/#deneme" } })} className="btn-pop brut-sm rounded-full bg-[#FF5436] px-6 py-3 font-bold">Ücretsiz kayıt ol</button>
+        <button data-testid="demo-guest-login" onClick={() => navigate("/giris", { state: { from: "/#deneme" } })} className="btn-pop brut-sm rounded-full bg-white px-6 py-3 font-bold">Giriş yap</button>
+      </div>
+    </div>
+  );
+};
 
 const parseExam = (text) => {
   const s = text.indexOf("{");
@@ -49,7 +65,17 @@ export const Demo = () => {
   const [exam, setExam] = useState(null);
   const [meta, setMeta] = useState(null);
   const [runId, setRunId] = useState(0);
+  const [examId, setExamId] = useState(null);
+  const [limitHit, setLimitHit] = useState(false);
+  const [usage, setUsage] = useState(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const outRef = useRef(null);
+
+  useEffect(() => {
+    if (user !== false) { setUsage(null); setLimitHit(false); return; }
+    apiJson("/guest-usage").then((d) => { setUsage(d); setLimitHit((d?.used ?? 0) >= (d?.limit ?? 2)); }).catch(() => setUsage(null));
+  }, [user]);
 
   useEffect(() => {
     const onPreset = (e) => setForm((f) => ({ ...f, ...(e.detail || {}) }));
@@ -58,15 +84,17 @@ export const Demo = () => {
   }, []);
 
   const generate = async () => {
-    if (!API) { toast.error("Sunucuya ulaşılamıyor."); return; }
-    setLoading(true); setExam(null); setCount(0);
+    if (limitHit) { scrollToId("demo-output"); return; }
+    setLoading(true); setExam(null); setCount(0); setExamId(null);
     if (window.innerWidth < 1024) setTimeout(() => scrollToId("demo-output"), 50);
     let text = "";
+    let newId = null;
     try {
-      const res = await fetch(`${API}/generate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      const res = await apiFetch("/generate", { method: "POST", body: JSON.stringify(form) });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.detail || "Bir şeyler ters gitti, tekrar dene.");
+        if (res.status === 403 && !user) { setLimitHit(true); return; }
+        throw new Error(errText(err?.detail));
       }
       const reader = res.body.getReader();
       const dec = new TextDecoder();
@@ -82,13 +110,16 @@ export const Demo = () => {
           if (!line || line === "[DONE]") continue;
           const msg = JSON.parse(line);
           if (msg.error) throw new Error(msg.error);
+          if (msg.exam_id) newId = msg.exam_id;
           text += msg.t || "";
         }
         setCount((text.match(/"question"\s*:/g) || []).length);
       }
       const data = parseExam(text);
       if (!data) throw new Error("Sorular okunamadı, lütfen tekrar dene.");
-      setExam(data); setMeta({ ...form }); setRunId((r) => r + 1);
+      setExam(data); setMeta({ ...form }); setRunId((r) => r + 1); setExamId(newId);
+      if (newId) toast.success("Yazılın Yazılılarım'a kaydedildi.");
+      if (!user) setUsage((u) => (u ? { ...u, used: u.used + 1 } : u));
     } catch (err) {
       toast.error(err?.message || "Bir şeyler ters gitti.");
     } finally {
@@ -104,14 +135,26 @@ export const Demo = () => {
           <h2 className="font-display mt-5 max-w-4xl text-4xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl">
             Hadi, ilk yazılını <span className="text-[#FFD43B]">şimdi</span> oluştur.
           </h2>
-          <p className="mt-5 max-w-2xl text-base text-[#FFF6E9]/85 sm:text-lg">Kayıt yok, kurulum yok. Seç, bas, çöz.</p>
+          <p className="mt-5 max-w-2xl text-base text-[#FFF6E9]/85 sm:text-lg">Kayıt olmadan 2 yazılı ücretsiz. Seç, bas, çöz.</p>
         </Reveal>
         <div className="mt-14 grid gap-10 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <div className="lg:sticky lg:top-28"><DemoForm form={form} setForm={setForm} onSubmit={generate} loading={loading} /></div>
+            <div className="lg:sticky lg:top-28">
+              <DemoForm form={form} setForm={setForm} onSubmit={generate} loading={loading} />
+              {user === false && usage && (
+                <p className="mt-4 rounded-xl border-2 border-dashed border-[#FFF6E9]/40 px-4 py-3 text-sm text-[#FFF6E9]/90" data-testid="demo-guest-usage">
+                  Ücretsiz hakkın: <b>{Math.max(0, usage.limit - usage.used)}/{usage.limit}</b> yazılı. <button onClick={() => navigate("/giris", { state: { mode: "register", from: "/#deneme" } })} className="font-bold text-[#FFD43B] underline underline-offset-4" data-testid="demo-usage-register-link">Kayıt ol</button>, yazılıların kaydedilsin.
+                </p>
+              )}
+              {user && (
+                <button onClick={() => navigate("/yazililarim")} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#FFF6E9] underline underline-offset-4 hover:text-[#FFD43B]" data-testid="demo-my-exams-link">
+                  <BookOpenCheck size={16} /> Yazılıların hesabına kaydediliyor
+                </button>
+              )}
+            </div>
           </div>
           <div id="demo-output" ref={outRef} className="lg:col-span-8">
-            {loading ? <Writing count={count} /> : exam ? <ExamPaper key={runId} exam={exam} meta={meta} onNew={() => { setExam(null); scrollToId("deneme"); }} /> : <Empty />}
+            {loading ? <Writing count={count} /> : exam ? <ExamPaper key={runId} exam={exam} meta={meta} examId={examId} onNew={() => { setExam(null); scrollToId("deneme"); }} /> : limitHit ? <GuestLimit /> : <Empty />}
           </div>
         </div>
       </div>

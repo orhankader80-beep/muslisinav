@@ -5,30 +5,37 @@ import os
 import uuid
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import Literal
+from urllib.parse import urlparse
 
-from dotenv import load_dotenv
+from core import client, db
 from emergentintegrations.llm.chat import LlmChat, StreamDone, TextDelta, UserMessage
 from fastapi import APIRouter, FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse
-from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, EmailStr, Field
 from pymongo import ASCENDING, DESCENDING, IndexModel
 from starlette.middleware.cors import CORSMiddleware
 
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+import auth
+import exams
+from auth import client_ip, optional_user
 
-client = AsyncIOMotorClient(os.environ['MONGO_URL'])
-db = client[os.environ['DB_NAME']]
 LLM_KEY = os.environ['EMERGENT_LLM_KEY']
 HOURLY_LIMIT = 12
 CHECK_LIMIT = 30
+GUEST_LIMIT = 2
 
 INDEXES: dict[str, list[IndexModel]] = {
     "waitlist": [IndexModel([("email", ASCENDING)], name="email", unique=True)],
     "generations": [IndexModel([("ip", ASCENDING), ("kind", ASCENDING), ("created_at", DESCENDING)], name="ip_kind_created")],
+    "users": [IndexModel([("email", ASCENDING)], name="email", unique=True),
+              IndexModel([("user_id", ASCENDING)], name="user_id", unique=True)],
+    "user_sessions": [IndexModel([("session_token", ASCENDING)], name="session_token"),
+                      IndexModel([("expires_at", ASCENDING)], name="expires_ttl", expireAfterSeconds=0)],
+    "login_attempts": [IndexModel([("identifier", ASCENDING)], name="identifier")],
+    "exams": [IndexModel([("user_id", ASCENDING), ("created_at", DESCENDING)], name="user_created"),
+              IndexModel([("id", ASCENDING)], name="id", unique=True)],
+    "guest_usage": [IndexModel([("guest_id", ASCENDING)], name="guest_id")],
 }
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -130,9 +137,8 @@ def build_prompt(r: GenerateRequest) -> str:
     )
 
 
-def client_ip(request: Request) -> str:
-    fwd = request.headers.get("x-forwarded-for", "")
-    return fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else "unknown")
+def guest_id_of(request: Request) -> str:
+    return request.headers.get("x-guest-id", "").strip()[:64]
 
 
 @api_router.get("/")
@@ -140,8 +146,22 @@ async def root():
     return {"message": "Mulisınav API"}
 
 
+@api_router.get("/guest-usage")
+async def guest_usage(request: Request):
+    gid = guest_id_of(request)
+    used = await db.guest_usage.count_documents({"guest_id": gid}) if gid else 0
+    return {"used": used, "limit": GUEST_LIMIT}
+
+
 @api_router.post("/generate")
 async def generate(body: GenerateRequest, request: Request):
+    user = await optional_user(request)
+    gid = guest_id_of(request)
+    if not user:
+        if not gid:
+            raise HTTPException(status_code=400, detail="Tarayıcı kimliği eksik, sayfayı yenile.")
+        if await db.guest_usage.count_documents({"guest_id": gid}) >= GUEST_LIMIT:
+            raise HTTPException(status_code=403, detail="Ücretsiz 2 yazılı hakkını kullandın. Devam etmek için ücretsiz kayıt ol.")
     ip = client_ip(request)
     await enforce_limit("generate", ip, HOURLY_LIMIT)
 
@@ -149,12 +169,27 @@ async def generate(body: GenerateRequest, request: Request):
         .with_model("anthropic", "claude-sonnet-4-6")
 
     async def events():
+        text = ""
         try:
             async for ev in chat.stream_message(UserMessage(text=build_prompt(body))):
                 if isinstance(ev, TextDelta):
+                    text += ev.content
                     yield f"data: {json.dumps({'t': ev.content}, ensure_ascii=False)}\n\n"
                 elif isinstance(ev, StreamDone):
                     break
+            exam = parse_json(text)
+            if isinstance(exam.get("questions"), list) and exam["questions"]:
+                if user:
+                    exam_id = str(uuid.uuid4())
+                    await db.exams.insert_one({
+                        "id": exam_id, "user_id": user["user_id"], **body.model_dump(),
+                        "title": str(exam.get("title", ""))[:200], "questions": exam["questions"][:10],
+                        "total": sum(int(q.get("points") or 0) for q in exam["questions"][:10] if isinstance(q, dict)),
+                        "answers": {}, "results": {}, "score": None, "checked_at": None,
+                        "created_at": datetime.now(timezone.utc).isoformat()})
+                    yield f"data: {json.dumps({'exam_id': exam_id})}\n\n"
+                else:
+                    await db.guest_usage.insert_one({"guest_id": gid, "ip": ip, "created_at": datetime.now(timezone.utc).isoformat()})
             yield "data: [DONE]\n\n"
         except Exception as exc:
             logger.error("generate failed: %s", exc)
@@ -200,6 +235,20 @@ async def join_waitlist(body: WaitlistRequest):
 
 
 app.include_router(api_router)
+app.include_router(auth.router)
+app.include_router(exams.router)
+
+
+@app.middleware("http")
+async def origin_check(request: Request, call_next):
+    has_auth_cookie = any(request.cookies.get(c) for c in ("access_token", "refresh_token", "session_token"))
+    if request.method in ("POST", "PUT", "PATCH", "DELETE") and request.url.path.startswith("/api") and has_auth_cookie:
+        origin = request.headers.get("origin")
+        host = request.headers.get("x-forwarded-host") or request.headers.get("host")
+        if origin and urlparse(origin).netloc != host:
+            return JSONResponse({"detail": "Geçersiz istek kaynağı."}, status_code=403)
+    return await call_next(request)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

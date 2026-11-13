@@ -1,18 +1,33 @@
 import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 import "@/App.css";
 import { Toaster } from "@/components/ui/sonner";
-import { Nav } from "@/components/landing/Nav";
-import { Hero } from "@/components/landing/Hero";
-import { Marquee } from "@/components/landing/Marquee";
-import { Bento } from "@/components/landing/Bento";
-import { Steps } from "@/components/landing/Steps";
-import { Demo } from "@/components/landing/Demo";
-import { Subjects } from "@/components/landing/Subjects";
-import { Waitlist } from "@/components/landing/Waitlist";
-import { Faq } from "@/components/landing/Faq";
-import { Footer } from "@/components/landing/Footer";
+import { AuthProvider } from "@/context/AuthContext";
+import { AuthCallback, ProtectedRoute } from "@/components/auth/AuthGuards";
+import Landing from "@/pages/Landing";
+import AuthPage from "@/pages/AuthPage";
+import MyExams from "@/pages/MyExams";
+import ExamView from "@/pages/ExamView";
+
+function AppRouter() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => { window.__navigate = navigate; }, [navigate]);
+  useEffect(() => { if (!location.hash) window.__lenis?.scrollTo(0, { immediate: true }); }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (location.hash?.includes("session_id=")) return <AuthCallback />;
+  return (
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/giris" element={<AuthPage />} />
+      <Route path="/yazililarim" element={<ProtectedRoute><MyExams /></ProtectedRoute>} />
+      <Route path="/yazili/:id" element={<ProtectedRoute><ExamView /></ProtectedRoute>} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
 
 function App() {
   useEffect(() => {
@@ -26,19 +41,12 @@ function App() {
 
   return (
     <div className="App overflow-x-clip">
-      <Nav />
-      <main>
-        <Hero />
-        <Marquee />
-        <Bento />
-        <Steps />
-        <Demo />
-        <Subjects />
-        <Waitlist />
-        <Faq />
-      </main>
-      <Footer />
-      <Toaster position="bottom-center" />
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRouter />
+          <Toaster position="bottom-center" />
+        </AuthProvider>
+      </BrowserRouter>
     </div>
   );
 }
