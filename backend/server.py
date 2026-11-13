@@ -19,6 +19,7 @@ from starlette.middleware.cors import CORSMiddleware
 import auth
 import exams
 from auth import client_ip, optional_user
+from json_repair import repair_json
 
 LLM_KEY = os.environ['EMERGENT_LLM_KEY']
 HOURLY_LIMIT = 12
@@ -101,7 +102,14 @@ def build_check_prompt(r: CheckRequest) -> str:
 
 def parse_json(text: str) -> dict:
     start, end = text.find("{"), text.rfind("}")
-    return json.loads(text[start:end + 1]) if start >= 0 and end > start else {}
+    if start < 0 or end <= start:
+        return {}
+    raw = text[start:end + 1]
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        data = repair_json(raw, return_objects=True)
+    return data if isinstance(data, dict) else {}
 
 
 async def enforce_limit(kind: str, ip: str, limit: int) -> None:
@@ -133,7 +141,8 @@ def build_prompt(r: GenerateRequest) -> str:
         "Sorular Türkçe, sınıf seviyesine uygun ve net olsun. Şu JSON şemasını kullan:\n"
         '{"title": "kısa sınav başlığı", "questions": [{"type": "acik" veya "test", '
         '"question": "soru metni", "options": ["A) ...", "B) ...", "C) ...", "D) ..."] (açık uçluda boş liste), '
-        '"answer": "doğru cevap (testte harf ve seçenek)", "explanation": "adım adım kısa çözüm", "points": 20}]}'
+        '"answer": "doğru cevap (testte harf ve seçenek)", "explanation": "adım adım kısa çözüm", "points": 20}]}\n'
+        "Metinlerin içinde çift tırnak (\") kullanma; alıntı gerekirse tek tırnak kullan."
     )
 
 
@@ -165,31 +174,40 @@ async def generate(body: GenerateRequest, request: Request):
     ip = client_ip(request)
     await enforce_limit("generate", ip, HOURLY_LIMIT)
 
-    chat = LlmChat(api_key=LLM_KEY, session_id=f"exam-{uuid.uuid4()}", system_message=SYSTEM_PROMPT) \
-        .with_model("anthropic", "claude-sonnet-4-6")
-
     async def events():
-        text = ""
         try:
-            async for ev in chat.stream_message(UserMessage(text=build_prompt(body))):
-                if isinstance(ev, TextDelta):
-                    text += ev.content
-                    yield f"data: {json.dumps({'t': ev.content}, ensure_ascii=False)}\n\n"
-                elif isinstance(ev, StreamDone):
+            questions, exam = [], {}
+            for attempt in range(2):
+                if attempt:
+                    yield f"data: {json.dumps({'reset': True})}\n\n"
+                chat = LlmChat(api_key=LLM_KEY, session_id=f"exam-{uuid.uuid4()}", system_message=SYSTEM_PROMPT) \
+                    .with_model("anthropic", "claude-sonnet-4-6")
+                text = ""
+                async for ev in chat.stream_message(UserMessage(text=build_prompt(body))):
+                    if isinstance(ev, TextDelta):
+                        text += ev.content
+                        yield f"data: {json.dumps({'t': ev.content}, ensure_ascii=False)}\n\n"
+                    elif isinstance(ev, StreamDone):
+                        break
+                exam = parse_json(text)
+                questions = [q for q in exam.get("questions", []) if isinstance(q, dict) and q.get("question")][:10]
+                if questions:
                     break
-            exam = parse_json(text)
-            if isinstance(exam.get("questions"), list) and exam["questions"]:
-                if user:
-                    exam_id = str(uuid.uuid4())
-                    await db.exams.insert_one({
-                        "id": exam_id, "user_id": user["user_id"], **body.model_dump(),
-                        "title": str(exam.get("title", ""))[:200], "questions": exam["questions"][:10],
-                        "total": sum(int(q.get("points") or 0) for q in exam["questions"][:10] if isinstance(q, dict)),
-                        "answers": {}, "results": {}, "score": None, "checked_at": None,
-                        "created_at": datetime.now(timezone.utc).isoformat()})
-                    yield f"data: {json.dumps({'exam_id': exam_id})}\n\n"
-                else:
-                    await db.guest_usage.insert_one({"guest_id": gid, "ip": ip, "created_at": datetime.now(timezone.utc).isoformat()})
+                logger.error("unparsed output (%d chars): %s ... %s", len(text), text[:200], text[-200:])
+            if not questions:
+                raise ValueError("no questions parsed")
+            exam = {"title": str(exam.get("title", ""))[:200], "questions": questions}
+            exam_id = None
+            if user:
+                exam_id = str(uuid.uuid4())
+                await db.exams.insert_one({
+                    "id": exam_id, "user_id": user["user_id"], **body.model_dump(), **exam,
+                    "total": sum(int(q.get("points") or 0) for q in questions),
+                    "answers": {}, "results": {}, "score": None, "checked_at": None,
+                    "created_at": datetime.now(timezone.utc).isoformat()})
+            else:
+                await db.guest_usage.insert_one({"guest_id": gid, "ip": ip, "created_at": datetime.now(timezone.utc).isoformat()})
+            yield f"data: {json.dumps({'exam': exam, 'exam_id': exam_id}, ensure_ascii=False)}\n\n"
             yield "data: [DONE]\n\n"
         except Exception as exc:
             logger.error("generate failed: %s", exc)

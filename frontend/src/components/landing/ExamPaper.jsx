@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { Printer, RotateCcw, ClipboardCheck, Loader2 } from "lucide-react";
+import { RotateCcw, ClipboardCheck, Loader2 } from "lucide-react";
 import { LogoMark } from "./Logo";
+import { PdfMenu } from "./PdfMenu";
 import { QuestionCard } from "./QuestionCard";
 import { useExamCheck } from "./useExamCheck";
 
@@ -47,10 +48,8 @@ export const ExamPaper = ({ exam, meta, onNew, examId, initialAnswers, initialRe
         <p className="text-sm text-[#16130F]/75" data-testid="demo-score-hint">
           {!checked ? "Cevaplarını yaz ya da şıkkını seç, sonra “Cevaplarımı kontrol et”e bas. Notun otomatik hesaplanır." : score >= 85 ? "Harika! Bu konuya hazırsın." : score >= 50 ? "İyi gidiyorsun. Yanlışlarının çözümüne bir göz at." : "Çözümleri oku ve yeni bir deneme oluştur."}
         </p>
-        <div className="flex gap-2">
-          <button data-testid="demo-download-pdf-button" onClick={() => window.print()} className="btn-pop brut-sm inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold">
-            <Printer size={16} /> Yazdır / PDF
-          </button>
+        <div className="flex shrink-0 gap-2 whitespace-nowrap">
+          <PdfMenu exam={exam} meta={meta} />
           <button data-testid="demo-new-exam-button" onClick={onNew} className="btn-pop brut-sm inline-flex items-center gap-2 rounded-full bg-[#2D5BFF] px-4 py-2.5 text-sm font-bold text-white">
             <RotateCcw size={16} /> Yeni yazılı
           </button>

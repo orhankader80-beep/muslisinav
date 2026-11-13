@@ -25,6 +25,10 @@ User choices: Tanıtım + çalışan deneme; Ortaokul ve lise (5–12); ad: Muli
 - Guests: 2 free exams per browser (X-Guest-Id), then sign-up prompt.
 - Not built: forgot/reset password (needs an email provider).
 
+## Implemented (2026-11-13, iteration 4)
+- "PDF indir" menu on exam paper: Soru kâğıdı / Cevap anahtarlı / Yazdır (jspdf + html2canvas, block-wise A4 pagination, Turkish chars OK).
+- Generation robustness: json-repair fallback + one automatic retry; backend sends parsed exam to client.
+
 ## Backlog
 - P1: Konu bazlı soru geçmişi (tarayıcıda kayıtlı), PDF indirme (print yerine gerçek PDF)
 - P2: Öğrenci hesapları ve ilerleme takibi, öğretmen modu

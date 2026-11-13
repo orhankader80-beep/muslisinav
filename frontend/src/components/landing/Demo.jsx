@@ -89,6 +89,7 @@ export const Demo = () => {
     if (window.innerWidth < 1024) setTimeout(() => scrollToId("demo-output"), 50);
     let text = "";
     let newId = null;
+    let serverExam = null;
     try {
       const res = await apiFetch("/generate", { method: "POST", body: JSON.stringify(form) });
       if (!res.ok) {
@@ -110,12 +111,14 @@ export const Demo = () => {
           if (!line || line === "[DONE]") continue;
           const msg = JSON.parse(line);
           if (msg.error) throw new Error(msg.error);
+          if (msg.reset) text = "";
           if (msg.exam_id) newId = msg.exam_id;
+          if (msg.exam) serverExam = msg.exam;
           text += msg.t || "";
         }
         setCount((text.match(/"question"\s*:/g) || []).length);
       }
-      const data = parseExam(text);
+      const data = Array.isArray(serverExam?.questions) && serverExam.questions.length ? serverExam : parseExam(text);
       if (!data) throw new Error("Sorular okunamadı, lütfen tekrar dene.");
       setExam(data); setMeta({ ...form }); setRunId((r) => r + 1); setExamId(newId);
       if (newId) toast.success("Yazılın Yazılılarım'a kaydedildi.");
