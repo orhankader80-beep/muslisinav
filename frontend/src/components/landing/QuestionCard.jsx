@@ -32,7 +32,16 @@ export const QuestionCard = ({ q, i, mark, onMark }) => {
               ))}
             </ul>
           )}
-          {q?.type !== "test" && <div className="ruled mt-3 h-24 rounded-xl border-2 border-dashed border-[#16130F]/15 print:h-40" />}
+          {q?.type !== "test" && (
+            <textarea
+              data-testid={`demo-answer-input-${n}`}
+              data-lenis-prevent
+              rows={4}
+              placeholder="Cevabını buraya yaz…"
+              aria-label={`${n}. sorunun cevabı`}
+              className="ruled mt-3 w-full resize-y rounded-xl border-2 border-dashed border-[#16130F]/30 bg-transparent px-3 pt-1 text-base leading-8 text-[#16130F] placeholder:text-[#16130F]/50 focus:border-solid focus:border-[#2D5BFF] focus:outline-none print:h-40"
+            />
+          )}
 
           <div className="no-print mt-4 flex flex-wrap items-center gap-2">
             <button data-testid={`demo-toggle-answer-${n}`} onClick={() => setOpen((o) => !o)} className="btn-pop brut-sm inline-flex items-center gap-2 rounded-full bg-[#FFD43B] px-4 py-2 text-sm font-bold">
