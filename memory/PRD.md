@@ -15,6 +15,10 @@ User choices: Tanıtım + çalışan deneme; Ortaokul ve lise (5–12); ad: Muli
 ## Implemented (2026-11-13)
 - Neo-brutalist pop landing: kinetic masked hero, 3D tilt exam card + parallax photo, slow marquee, 12-col bento, 3 steps, live AI demo (grade/subject/topic/difficulty/type → 5-question 100-point exam, answer reveal, self-scoring, print/PDF), subject chips that preset the demo, waitlist, FAQ, giant footer wordmark.
 
+## Implemented (2026-11-13, iteration 2)
+- Open-ended answers typed into textareas; test options clickable.
+- "Cevaplarımı kontrol et": test questions graded in browser, open-ended graded by AI via `POST /api/check` (partial credit + feedback, 30 req/hour/IP). Manual Doğru/Yanlış buttons removed.
+
 ## Backlog
 - P1: Konu bazlı soru geçmişi (tarayıcıda kayıtlı), PDF indirme (print yerine gerçek PDF)
 - P2: Öğrenci hesapları ve ilerleme takibi, öğretmen modu

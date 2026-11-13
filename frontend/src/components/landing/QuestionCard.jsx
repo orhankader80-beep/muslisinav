@@ -1,10 +1,27 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff, Check, X } from "lucide-react";
+import { Eye, EyeOff, Check, X, CircleDashed, MinusCircle } from "lucide-react";
 
-const LETTERS = ["A", "B", "C", "D"];
+export const LETTERS = ["A", "B", "C", "D", "E"];
 
-export const QuestionCard = ({ q, i, mark, onMark }) => {
+const STATUS = {
+  ok: { label: "Doğru", bg: "bg-[#2ED59A]", Icon: Check },
+  partial: { label: "Kısmen doğru", bg: "bg-[#FFD43B]", Icon: MinusCircle },
+  no: { label: "Yanlış", bg: "bg-[#FF5436]", Icon: X },
+  empty: { label: "Boş bırakıldı", bg: "bg-white", Icon: CircleDashed },
+};
+
+const Result = ({ r, points, n }) => {
+  const s = STATUS[r.status] || STATUS.no;
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`brut-sm mt-4 rounded-2xl ${s.bg} p-4`} data-testid={`demo-result-${n}`}>
+      <p className="flex items-center gap-2 font-display text-lg font-extrabold"><s.Icon size={18} /> {s.label} · {r.score}/{points} puan</p>
+      {r.feedback && <p className="mt-1 leading-relaxed">{r.feedback}</p>}
+    </motion.div>
+  );
+};
+
+export const QuestionCard = ({ q, i, answer, onAnswer, result }) => {
   const [open, setOpen] = useState(false);
   const options = Array.isArray(q?.options) ? q.options : [];
   const n = i + 1;
@@ -27,9 +44,22 @@ export const QuestionCard = ({ q, i, mark, onMark }) => {
           <p className="whitespace-pre-line text-base font-semibold leading-7 sm:text-lg">{q?.question}</p>
           {options.length > 0 && (
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-              {options.map((o, k) => (
-                <li key={k} className="rounded-xl border-2 border-[#16130F]/20 px-3 py-2 text-sm">{/^[A-E]\)/.test(o) ? o : `${LETTERS[k]}) ${o}`}</li>
-              ))}
+              {options.map((o, k) => {
+                const picked = answer === LETTERS[k];
+                return (
+                  <li key={k}>
+                    <button
+                      type="button"
+                      data-testid={`demo-option-${n}-${LETTERS[k]}`}
+                      aria-pressed={picked}
+                      onClick={() => onAnswer(picked ? "" : LETTERS[k])}
+                      className={`w-full rounded-xl border-2 px-3 py-2 text-left text-sm transition-colors ${picked ? "border-[#16130F] bg-[#2D5BFF] font-bold text-white" : "border-[#16130F]/20 hover:border-[#16130F] hover:bg-[#FFF6E9]"}`}
+                    >
+                      {/^[A-E]\)/.test(o) ? o : `${LETTERS[k]}) ${o}`}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
           {q?.type !== "test" && (
@@ -37,6 +67,9 @@ export const QuestionCard = ({ q, i, mark, onMark }) => {
               data-testid={`demo-answer-input-${n}`}
               data-lenis-prevent
               rows={4}
+              value={answer || ""}
+              onChange={(e) => onAnswer(e.target.value)}
+              maxLength={1500}
               placeholder="Cevabını buraya yaz…"
               aria-label={`${n}. sorunun cevabı`}
               className="ruled mt-3 w-full resize-y rounded-xl border-2 border-dashed border-[#16130F]/30 bg-transparent px-3 pt-1 text-base leading-8 text-[#16130F] placeholder:text-[#16130F]/50 focus:border-solid focus:border-[#2D5BFF] focus:outline-none print:h-40"
@@ -47,14 +80,9 @@ export const QuestionCard = ({ q, i, mark, onMark }) => {
             <button data-testid={`demo-toggle-answer-${n}`} onClick={() => setOpen((o) => !o)} className="btn-pop brut-sm inline-flex items-center gap-2 rounded-full bg-[#FFD43B] px-4 py-2 text-sm font-bold">
               {open ? <EyeOff size={16} /> : <Eye size={16} />} {open ? "Cevabı gizle" : "Cevabı göster"}
             </button>
-            <span className="ml-1 text-sm font-semibold text-[#16130F]/80" data-testid={`demo-self-check-label-${n}`}>Cevabım doğru muydu?</span>
-            <button data-testid={`demo-mark-correct-${n}`} onClick={() => onMark(mark === "ok" ? null : "ok")} aria-pressed={mark === "ok"} className={`brut-sm inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-bold transition-colors ${mark === "ok" ? "bg-[#2ED59A]" : "bg-white hover:bg-[#2ED59A]/40"}`}>
-              <Check size={16} /> Doğru bildim
-            </button>
-            <button data-testid={`demo-mark-wrong-${n}`} onClick={() => onMark(mark === "no" ? null : "no")} aria-pressed={mark === "no"} className={`brut-sm inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-bold transition-colors ${mark === "no" ? "bg-[#FF5436]" : "bg-white hover:bg-[#FF5436]/40"}`}>
-              <X size={16} /> Yanlış bildim
-            </button>
           </div>
+
+          {result && <Result r={result} points={q?.points ?? 0} n={n} />}
 
           <AnimatePresence initial={false}>
             {open && (
